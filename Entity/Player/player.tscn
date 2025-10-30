@@ -1,0 +1,33 @@
+[gd_scene load_steps=5 format=3 uid="uid://vassimvpbgny"]
+
+[ext_resource type="Texture2D" uid="uid://cl7p6v40l2mb0" path="res://Assets/Tiles.png" id="1_mc1dd"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_x1f5c"]
+atlas = ExtResource("1_mc1dd")
+region = Rect2(0, 406, 46, 58)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_qb0yx"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_x1f5c")
+}],
+"loop": true,
+"name": &"Idle",
+"speed": 5.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_viyt1"]
+radius = 8.0
+height = 50.0
+
+[node name="Player" type="CharacterBody2D"]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -29)
+sprite_frames = SubResource("SpriteFrames_qb0yx")
+animation = &"Idle"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -25)
+shape = SubResource("CapsuleShape2D_viyt1")
