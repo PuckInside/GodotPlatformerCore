@@ -22,22 +22,31 @@ extends Node
 			state = new_state
 			state.enter()
 
+@onready var variables: Dictionary[StringName, Variant] = {
+	\"move_direction\": 0.0,
+}
+
 func _ready() -> void:
 	assert(is_instance_valid(owner), ErrorMessage.INVALID_OWNER)
 	assert(owner is PlatformerBody2D, ErrorMessage.OWNER_TYPE)
+	
+	var states: Array[BaseState] = []
+	for child in get_children():
+		if child is BaseState:
+			states.append(child)
+			child.finished.connect(_on_state_finished.bind(child))
 
 func _physics_process(delta: float) -> void:
 	state.update(delta)
 	
 	var input: float = Input.get_axis(\"left\", \"right\")
-	run(input)
-
-func run(direction: float) -> void:
-	if direction:
+	variables[\"move_direction\"] = input
+	
+	if input:
 		state = $Run
-		$Run.direction = direction
-	else:
-		state = $Idle
+
+func _on_state_finished(_from_state: BaseState) -> void:
+	state = $Idle
 "
 
 [sub_resource type="GDScript" id="GDScript_gggw1"]
@@ -67,7 +76,6 @@ script/source = "class_name Run
 extends BaseState
 
 @onready var state_machine := $\"..\"
-var direction: float = 1.0
 
 func enter() -> void:
 	pass
@@ -78,6 +86,11 @@ func exit() -> void:
 func update(delta: float) -> void:
 	var body := state_machine.body as PlatformerBody2D
 	var move_speed := state_machine.move_speed as float
+	var direction: float = state_machine.variables[\"move_direction\"]
+	
+	if not direction:
+		finished.emit()
+		return
 	
 	body.velocity.x = move_toward(body.velocity.x, direction * move_speed, move_speed * 0.16)
 	body.apply_gravity(delta)
