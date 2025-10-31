@@ -6,3 +6,6 @@ func enter() -> void
 
 @abstract
 func exit() -> void
+
+@abstract
+func update(delta: float) -> void

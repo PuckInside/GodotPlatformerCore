@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=4 uid="uid://bi48hgwa3peo8"]
+[gd_scene load_steps=5 format=4 uid="uid://bi48hgwa3peo8"]
 
 [ext_resource type="Texture2D" uid="uid://cl7p6v40l2mb0" path="res://Assets/Tiles.png" id="1_skmq4"]
+[ext_resource type="PackedScene" uid="uid://vassimvpbgny" path="res://Entity/Player/player.tscn" id="2_au00k"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_au00k"]
 texture = ExtResource("1_skmq4")
@@ -505,3 +506,6 @@ tile_set = SubResource("TileSet_707cn")
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(0, 21)
 zoom = Vector2(6, 6)
+
+[node name="Player" parent="." instance=ExtResource("2_au00k")]
+position = Vector2(-119, 31)

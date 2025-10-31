@@ -1,0 +1,93 @@
+[gd_scene load_steps=4 format=3 uid="uid://cbdotdhigy3wt"]
+
+[sub_resource type="GDScript" id="GDScript_t4oca"]
+script/source = "class_name MovementFSM
+extends Node
+
+@export var move_speed: float = 160.0
+@export var brake_speed: float = 200.0
+@export var jump_height: float = 16 * 3
+@export var double_height: float = 16 * 2
+
+@onready var body: PlatformerBody2D = (owner as PlatformerBody2D):
+	set(value):
+		assert(false, ErrorMessage.READ_ONLY)
+
+@onready var state: BaseState = $Idle:
+	set(new_state):
+		if state:
+			state.exit()
+		
+		if new_state:
+			state = new_state
+			state.enter()
+
+func _ready() -> void:
+	assert(is_instance_valid(owner), ErrorMessage.INVALID_OWNER)
+	assert(owner is PlatformerBody2D, ErrorMessage.OWNER_TYPE)
+
+func _physics_process(delta: float) -> void:
+	state.update(delta)
+	
+	var input: float = Input.get_axis(\"left\", \"right\")
+	run(input)
+
+func run(direction: float) -> void:
+	if direction:
+		state = $Run
+		$Run.direction = direction
+	else:
+		state = $Idle
+"
+
+[sub_resource type="GDScript" id="GDScript_gggw1"]
+resource_name = "Idle"
+script/source = "class_name Idle
+extends BaseState
+
+@onready var state_machine := $\"..\"
+
+func enter() -> void:
+	pass
+
+func exit() -> void:
+	pass
+
+func update(delta: float) -> void:
+	var body := state_machine.body as PlatformerBody2D
+	var brake_speed := state_machine.brake_speed as float
+	
+	body.apply_brake(brake_speed, 0.2)
+	body.apply_gravity(delta)
+"
+
+[sub_resource type="GDScript" id="GDScript_irmcm"]
+resource_name = "Run"
+script/source = "class_name Run
+extends BaseState
+
+@onready var state_machine := $\"..\"
+var direction: float = 1.0
+
+func enter() -> void:
+	pass
+
+func exit() -> void:
+	pass
+
+func update(delta: float) -> void:
+	var body := state_machine.body as PlatformerBody2D
+	var move_speed := state_machine.move_speed as float
+	
+	body.velocity.x = move_toward(body.velocity.x, direction * move_speed, move_speed * 0.16)
+	body.apply_gravity(delta)
+"
+
+[node name="MovementFSM" type="Node"]
+script = SubResource("GDScript_t4oca")
+
+[node name="Idle" type="Node" parent="."]
+script = SubResource("GDScript_gggw1")
+
+[node name="Run" type="Node" parent="."]
+script = SubResource("GDScript_irmcm")

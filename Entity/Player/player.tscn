@@ -1,6 +1,16 @@
-[gd_scene load_steps=5 format=3 uid="uid://vassimvpbgny"]
+[gd_scene load_steps=7 format=3 uid="uid://vassimvpbgny"]
 
 [ext_resource type="Texture2D" uid="uid://cl7p6v40l2mb0" path="res://Assets/Tiles.png" id="1_mc1dd"]
+[ext_resource type="PackedScene" uid="uid://cbdotdhigy3wt" path="res://Entity/Player/movement_fsm.tscn" id="2_x1f5c"]
+
+[sub_resource type="GDScript" id="GDScript_i13w0"]
+resource_name = "Player"
+script/source = "class_name Player
+extends PlatformerBody2D
+
+func _physics_process(_delta: float) -> void:
+	move_and_slide()
+"
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_x1f5c"]
 atlas = ExtResource("1_mc1dd")
@@ -22,6 +32,8 @@ radius = 8.0
 height = 50.0
 
 [node name="Player" type="CharacterBody2D"]
+script = SubResource("GDScript_i13w0")
+metadata/_custom_type_script = "uid://uvg7xk5coa61"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(0, -29)
@@ -31,3 +43,5 @@ animation = &"Idle"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -25)
 shape = SubResource("CapsuleShape2D_viyt1")
+
+[node name="MovementFSM" parent="." instance=ExtResource("2_x1f5c")]
