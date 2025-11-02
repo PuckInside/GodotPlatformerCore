@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://cbdotdhigy3wt"]
+[gd_scene load_steps=5 format=3 uid="uid://cbdotdhigy3wt"]
 
 [sub_resource type="GDScript" id="GDScript_t4oca"]
 script/source = "class_name MovementFSM
@@ -7,20 +7,19 @@ extends Node
 @export var move_speed: float = 160.0
 @export var brake_speed: float = 200.0
 @export var jump_height: float = 16 * 3
-@export var double_height: float = 16 * 2
 
 @onready var body: PlatformerBody2D = (owner as PlatformerBody2D):
-	set(value):
+	set(value): 
 		assert(false, ErrorMessage.READ_ONLY)
 
-@onready var state: BaseState = $Idle:
+@onready var _state: BaseState = $Idle:
 	set(new_state):
-		if state:
-			state.exit()
+		if _state: 
+			_state.exit()
 		
 		if new_state:
-			state = new_state
-			state.enter()
+			_state = new_state
+			_state.enter()
 
 @onready var variables: Dictionary[StringName, Variant] = {
 	\"move_direction\": 0.0,
@@ -37,16 +36,27 @@ func _ready() -> void:
 			child.finished.connect(_on_state_finished.bind(child))
 
 func _physics_process(delta: float) -> void:
-	state.update(delta)
+	_state.update(delta)
 	
 	var input: float = Input.get_axis(\"left\", \"right\")
 	variables[\"move_direction\"] = input
 	
-	if input:
-		state = $Run
+	if variables[\"move_direction\"] and _state == $Idle:
+		_switch_state($Run)
+	
+	if Input.is_action_just_pressed(\"jump\"):
+		_switch_state($Jump)
+	if Input.is_action_just_released(\"jump\") and _state == $Jump:
+		_switch_state($Idle)
 
 func _on_state_finished(_from_state: BaseState) -> void:
-	state = $Idle
+	_switch_state($Idle)
+
+func _switch_state(new_state: BaseState):
+	if new_state == _state:
+		return
+	
+	_state = new_state
 "
 
 [sub_resource type="GDScript" id="GDScript_gggw1"]
@@ -96,6 +106,41 @@ func update(delta: float) -> void:
 	body.apply_gravity(delta)
 "
 
+[sub_resource type="GDScript" id="GDScript_1sejk"]
+resource_name = "Jump"
+script/source = "class_name Jump
+extends BaseState
+
+@onready var state_machine := $\"..\"
+
+var jump_cut_treshold := 40.0
+var jump_cut_ratio := 0.5
+
+func enter() -> void:
+	var body := state_machine.body as PlatformerBody2D
+	var jump_velocity := sqrt(2.15 * body.get_gravity().y * state_machine.jump_height) * -1.0
+	
+	body.velocity.y = jump_velocity
+
+func exit() -> void:
+	var body := state_machine.body as PlatformerBody2D
+	
+	if body.velocity.y <= -jump_cut_treshold:
+		body.velocity.y *= jump_cut_ratio
+
+func update(delta: float) -> void:
+	var body := state_machine.body as PlatformerBody2D
+	var move_speed := state_machine.move_speed as float
+	var direction: float = state_machine.variables[\"move_direction\"]
+	
+	if body.velocity.y >= 0.0:
+		finished.emit()
+		return
+	
+	body.velocity.x = move_toward(body.velocity.x, direction * move_speed, move_speed * 0.16)
+	body.apply_gravity(delta)
+"
+
 [node name="MovementFSM" type="Node"]
 script = SubResource("GDScript_t4oca")
 
@@ -104,3 +149,6 @@ script = SubResource("GDScript_gggw1")
 
 [node name="Run" type="Node" parent="."]
 script = SubResource("GDScript_irmcm")
+
+[node name="Jump" type="Node" parent="."]
+script = SubResource("GDScript_1sejk")
