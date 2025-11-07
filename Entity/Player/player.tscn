@@ -10,6 +10,17 @@ extends PlatformerBody2D
 
 func _physics_process(_delta: float) -> void:
 	move_and_slide()
+	
+	var move_axis: float = Input.get_axis(\"left\", \"right\")
+	$MovementFSM.move(move_axis)
+	
+	if Input.is_action_just_pressed(\"jump\"):
+		$MovementFSM.jump()
+	if Input.is_action_just_released(\"jump\"):
+		$MovementFSM.jump_cut()
+	
+	if Input.is_action_just_pressed(\"dash\"):
+		$MovementFSM.dash()
 "
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_x1f5c"]

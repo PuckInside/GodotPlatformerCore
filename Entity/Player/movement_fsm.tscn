@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://cbdotdhigy3wt"]
+[gd_scene load_steps=7 format=3 uid="uid://cbdotdhigy3wt"]
 
 [sub_resource type="GDScript" id="GDScript_t4oca"]
 script/source = "class_name MovementFSM
@@ -7,56 +7,61 @@ extends Node
 @export var move_speed: float = 160.0
 @export var brake_speed: float = 200.0
 @export var jump_height: float = 16 * 3
+@export var dash_distance: float = 16 * 5
+@export var dash_speed: float = 340.0
 
 @onready var body: PlatformerBody2D = (owner as PlatformerBody2D):
 	set(value): 
 		assert(false, ErrorMessage.READ_ONLY)
 
 @onready var _state: BaseState = $Idle:
-	set(new_state):
-		if _state: 
-			_state.exit()
-		
-		if new_state:
-			_state = new_state
-			_state.enter()
+	set(value): 
+		assert(value != null, ErrorMessage.NULL_FIELD)
+		_state = value
 
-@onready var variables: Dictionary[StringName, Variant] = {
-	\"move_direction\": 0.0,
-}
+var move_direction: float = 1.0
+var input_facing: float = 1.0
 
 func _ready() -> void:
 	assert(is_instance_valid(owner), ErrorMessage.INVALID_OWNER)
 	assert(owner is PlatformerBody2D, ErrorMessage.OWNER_TYPE)
 	
-	var states: Array[BaseState] = []
 	for child in get_children():
 		if child is BaseState:
-			states.append(child)
 			child.finished.connect(_on_state_finished.bind(child))
 
 func _physics_process(delta: float) -> void:
 	_state.update(delta)
-	
-	var input: float = Input.get_axis(\"left\", \"right\")
-	variables[\"move_direction\"] = input
-	
-	if variables[\"move_direction\"] and _state == $Idle:
-		_switch_state($Run)
-	
-	if Input.is_action_just_pressed(\"jump\"):
-		_switch_state($Jump)
-	if Input.is_action_just_released(\"jump\") and _state == $Jump:
-		_switch_state($Idle)
 
 func _on_state_finished(_from_state: BaseState) -> void:
 	_switch_state($Idle)
 
-func _switch_state(new_state: BaseState):
-	if new_state == _state:
+func _switch_state(new_state: BaseState) -> void:
+	assert(new_state != null, ErrorMessage.NULL_ARGUMENT)
+	
+	if _state == $Dash and new_state != $Idle:
 		return
 	
+	_state.exit()
 	_state = new_state
+	_state.enter()
+
+func move(input: float) -> void:
+	move_direction = input
+	input_facing = input if input != 0.0 else input_facing
+	
+	if move_direction and _state == $Idle:
+		_switch_state($Run)
+
+func jump() -> void:
+	_switch_state($Jump)
+
+func jump_cut() -> void:
+	if _state == $Jump: 
+		_switch_state($Idle)
+
+func dash() -> void:
+	_switch_state($Dash)
 "
 
 [sub_resource type="GDScript" id="GDScript_gggw1"]
@@ -96,7 +101,7 @@ func exit() -> void:
 func update(delta: float) -> void:
 	var body := state_machine.body as PlatformerBody2D
 	var move_speed := state_machine.move_speed as float
-	var direction: float = state_machine.variables[\"move_direction\"]
+	var direction: float = state_machine.move_direction
 	
 	if not direction:
 		finished.emit()
@@ -131,15 +136,53 @@ func exit() -> void:
 func update(delta: float) -> void:
 	var body := state_machine.body as PlatformerBody2D
 	var move_speed := state_machine.move_speed as float
-	var direction: float = state_machine.variables[\"move_direction\"]
+	var direction: float = state_machine.move_direction
 	
 	if body.velocity.y >= 0.0:
 		finished.emit()
 		return
 	
-	body.velocity.x = move_toward(body.velocity.x, direction * move_speed, move_speed * 0.16)
+	body.velocity.x = move_toward(body.velocity.x, direction * move_speed, move_speed * 0.1)
 	body.apply_gravity(delta)
 "
+
+[sub_resource type="GDScript" id="GDScript_do3vy"]
+resource_name = "Dash"
+script/source = "class_name Dash
+extends BaseState
+
+@onready var state_machine := $\"..\"
+@export var curve: Curve = null
+
+var facing: float = 1.0
+var traveled_distance: float = 0.0
+
+func enter() -> void:
+	facing = state_machine.input_facing
+	traveled_distance = 0.0
+
+func exit() -> void:
+	pass
+
+func update(delta: float) -> void:
+	var body := state_machine.body as PlatformerBody2D
+	var max_distance: float = state_machine.dash_distance - 16.0 / 2
+	var speed: float = state_machine.dash_speed
+	
+	if traveled_distance >= max_distance or body.is_on_wall():
+		finished.emit()
+		body.velocity.x = body.velocity.x * 0.565
+		return
+	
+	var force := facing * speed * curve.sample(traveled_distance / max_distance)
+	traveled_distance += abs(force * delta)
+	body.velocity.x = force
+	body.velocity.y = 0.0
+"
+
+[sub_resource type="Curve" id="Curve_t4oca"]
+_data = [Vector2(0, 0.65), 0.0, 3.22, 0, 0, Vector2(0.09898476, 1), 0.015337812, 0.015337812, 0, 0, Vector2(0.72842634, 0.9467442), -0.3470828, -0.3470828, 0, 0, Vector2(1, 0.7169038), -1.1938972, 0.0, 0, 0]
+point_count = 4
 
 [node name="MovementFSM" type="Node"]
 script = SubResource("GDScript_t4oca")
@@ -152,3 +195,7 @@ script = SubResource("GDScript_irmcm")
 
 [node name="Jump" type="Node" parent="."]
 script = SubResource("GDScript_1sejk")
+
+[node name="Dash" type="Node" parent="."]
+script = SubResource("GDScript_do3vy")
+curve = SubResource("Curve_t4oca")
