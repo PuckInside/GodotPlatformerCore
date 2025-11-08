@@ -8,6 +8,9 @@ resource_name = "Player"
 script/source = "class_name Player
 extends PlatformerBody2D
 
+var can_ground_jump: bool = false
+var can_dash: bool = false
+
 func _physics_process(_delta: float) -> void:
 	move_and_slide()
 	

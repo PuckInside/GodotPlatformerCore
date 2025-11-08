@@ -117,13 +117,14 @@ script/source = "class_name Jump
 extends BaseState
 
 @onready var state_machine := $\"..\"
+@onready var gravity: float = ProjectSettings.get_setting(\"physics/2d/default_gravity\")
 
 var jump_cut_treshold := 40.0
 var jump_cut_ratio := 0.5
 
 func enter() -> void:
 	var body := state_machine.body as PlatformerBody2D
-	var jump_velocity := sqrt(2.15 * body.get_gravity().y * state_machine.jump_height) * -1.0
+	var jump_velocity := sqrt(2.15 * gravity * state_machine.jump_height) * -1.0
 	
 	body.velocity.y = jump_velocity
 
