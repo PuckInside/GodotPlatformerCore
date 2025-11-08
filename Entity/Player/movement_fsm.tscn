@@ -46,9 +46,9 @@ func _switch_state(new_state: BaseState) -> void:
 	_state = new_state
 	_state.enter()
 
-func move(input: float) -> void:
+func move(input: float, facing: float) -> void:
 	move_direction = input
-	input_facing = input if input != 0.0 else input_facing
+	input_facing = facing if facing != 0.0 else input_facing
 	
 	if move_direction and _state == $Idle:
 		_switch_state($Run)
