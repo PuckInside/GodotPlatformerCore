@@ -14,6 +14,7 @@ func _physics_process(_delta: float) -> void:
 	move_and_slide()
 	
 	if is_on_floor():
+		$CoyoteTime.start()
 		can_dash = true
 	
 	var move_axis: float = Input.get_axis(\"left\", \"right\")
@@ -26,8 +27,10 @@ func _physics_process(_delta: float) -> void:
 	
 	$MovementFSM.move(move_axis, input_facing)
 	
-	if Input.is_action_just_pressed(\"jump\") and is_on_floor():
+	if Input.is_action_just_pressed(\"jump\") and not $CoyoteTime.is_stopped():
 		$MovementFSM.jump()
+		$CoyoteTime.stop()
+	
 	if Input.is_action_just_released(\"jump\"):
 		$MovementFSM.jump_cut()
 	
@@ -86,3 +89,7 @@ position = Vector2(0, -25)
 shape = SubResource("CapsuleShape2D_viyt1")
 
 [node name="MovementFSM" parent="." instance=ExtResource("2_x1f5c")]
+
+[node name="CoyoteTime" type="Timer" parent="."]
+wait_time = 0.125
+one_shot = true
