@@ -554,14 +554,15 @@ drag_vertical_enabled = true
 drag_top_margin = 0.32
 drag_bottom_margin = 0.28
 
-[node name="Area2D" type="Area2D" parent="."]
+[node name="BouncePad" type="Area2D" parent="."]
 position = Vector2(128, 48)
 script = SubResource("GDScript_au00k")
+height = 64.0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BouncePad"]
 position = Vector2(0, -4.5)
 shape = SubResource("RectangleShape2D_707cn")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Area2D"]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="BouncePad"]
 position = Vector2(0, -2)
 sprite_frames = SubResource("SpriteFrames_iwv7r")
