@@ -143,7 +143,7 @@ func update(delta: float) -> void:
 		finished.emit()
 		return
 	
-	body.velocity.x = move_toward(body.velocity.x, direction * move_speed, move_speed * 0.1)
+	body.velocity.x = move_toward(body.velocity.x, direction * move_speed, move_speed * 0.16)
 	body.apply_gravity(delta)
 "
 

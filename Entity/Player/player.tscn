@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://vassimvpbgny"]
+[gd_scene load_steps=8 format=3 uid="uid://vassimvpbgny"]
 
 [ext_resource type="Texture2D" uid="uid://cl7p6v40l2mb0" path="res://Assets/Tiles.png" id="1_mc1dd"]
 [ext_resource type="PackedScene" uid="uid://cbdotdhigy3wt" path="res://Entity/Player/movement_fsm.tscn" id="2_x1f5c"]
@@ -26,26 +26,17 @@ func _physics_process(_delta: float) -> void:
 	
 	$MovementFSM.move(move_axis, input_facing)
 	
-	if Input.is_action_just_pressed(\"jump\"):
-		_apply_ground_jump()
+	if Input.is_action_just_pressed(\"jump\") and is_on_floor():
+		$MovementFSM.jump()
 	if Input.is_action_just_released(\"jump\"):
 		$MovementFSM.jump_cut()
 	
-	if Input.is_action_just_pressed(\"dash\"):
-		_apply_dash()
+	if Input.is_action_just_pressed(\"dash\") and can_dash:
+		$MovementFSM.dash()
+		can_dash = false
 
-func _apply_ground_jump() -> void:
-	if not is_on_floor():
-		return
-	
+func bounce_me():
 	$MovementFSM.jump()
-
-func _apply_dash() -> void:
-	if not can_dash:
-		return
-	
-	$MovementFSM.dash()
-	can_dash = false
 "
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_x1f5c"]
@@ -63,6 +54,19 @@ animations = [{
 "speed": 5.0
 }]
 
+[sub_resource type="GDScript" id="GDScript_x1f5c"]
+resource_name = "PlayerSprite"
+script/source = "extends AnimatedSprite2D
+
+@onready var body := owner as PlatformerBody2D
+
+func _process(_delta: float) -> void:
+	if body.velocity.x > 0.0:
+		flip_h = false
+	if body.velocity.x < 0.0:
+		flip_h = true
+"
+
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_viyt1"]
 radius = 8.0
 height = 50.0
@@ -75,6 +79,7 @@ metadata/_custom_type_script = "uid://uvg7xk5coa61"
 position = Vector2(0, -29)
 sprite_frames = SubResource("SpriteFrames_qb0yx")
 animation = &"Idle"
+script = SubResource("GDScript_x1f5c")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -25)
