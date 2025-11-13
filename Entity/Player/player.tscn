@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://vassimvpbgny"]
+[gd_scene load_steps=9 format=3 uid="uid://vassimvpbgny"]
 
 [ext_resource type="Texture2D" uid="uid://cl7p6v40l2mb0" path="res://Assets/Tiles.png" id="1_mc1dd"]
 [ext_resource type="PackedScene" uid="uid://cbdotdhigy3wt" path="res://Entity/Player/movement_fsm.tscn" id="2_x1f5c"]
@@ -9,6 +9,9 @@ script/source = "class_name Player
 extends PlatformerBody2D
 
 var can_dash: bool = false
+
+func _ready() -> void:
+	$JumpInputBuffer.connect(\"do_jump\", _try_jump)
 
 func _physics_process(_delta: float) -> void:
 	move_and_slide()
@@ -27,9 +30,8 @@ func _physics_process(_delta: float) -> void:
 	
 	$MovementFSM.move(move_axis, input_facing)
 	
-	if Input.is_action_just_pressed(\"jump\") and not $CoyoteTime.is_stopped():
-		$MovementFSM.jump()
-		$CoyoteTime.stop()
+	if Input.is_action_pressed(\"jump\"):
+		$JumpInputBuffer.start()
 	
 	if Input.is_action_just_released(\"jump\"):
 		$MovementFSM.jump_cut()
@@ -38,8 +40,13 @@ func _physics_process(_delta: float) -> void:
 		$MovementFSM.dash()
 		can_dash = false
 
-func bounce_me():
+func _try_jump() -> void:
+	if $CoyoteTime.is_stopped():
+		return
+	
 	$MovementFSM.jump()
+	$CoyoteTime.stop()
+	$JumpInputBuffer.stop()
 "
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_x1f5c"]
@@ -74,6 +81,23 @@ func _process(_delta: float) -> void:
 radius = 8.0
 height = 50.0
 
+[sub_resource type="GDScript" id="GDScript_qb0yx"]
+resource_name = "JumpInputBuffer"
+script/source = "class_name JumpInputBuffer
+extends Timer
+
+signal do_jump
+
+@onready var _body := owner as PlatformerBody2D
+
+func _physics_process(_delta: float) -> void:
+	if not _body:
+		return
+	
+	if not is_stopped():
+		do_jump.emit()
+"
+
 [node name="Player" type="CharacterBody2D"]
 script = SubResource("GDScript_i13w0")
 metadata/_custom_type_script = "uid://uvg7xk5coa61"
@@ -93,3 +117,9 @@ shape = SubResource("CapsuleShape2D_viyt1")
 [node name="CoyoteTime" type="Timer" parent="."]
 wait_time = 0.125
 one_shot = true
+
+[node name="JumpInputBuffer" type="Timer" parent="."]
+process_callback = 0
+wait_time = 0.05
+one_shot = true
+script = SubResource("GDScript_qb0yx")

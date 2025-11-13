@@ -1,0 +1,52 @@
+[gd_scene load_steps=6 format=3 uid="uid://dkmt1bsoke73x"]
+
+[ext_resource type="Texture2D" uid="uid://cl7p6v40l2mb0" path="res://Assets/Tiles.png" id="1_cfvu4"]
+
+[sub_resource type="GDScript" id="GDScript_au00k"]
+resource_name = "BouncePad"
+script/source = "class_name BouncePad
+extends Area2D
+
+@export var height: float = 16.0 * 6
+
+func _ready() -> void:
+	body_entered.connect(bounce_body)
+
+func bounce_body(body: Node) -> void:
+	if not is_instance_valid(body):
+		return
+	if not body is CharacterBody2D:
+		return
+	
+	body.velocity.y = sqrt(2.15 * gravity * height) * -1.0
+"
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_707cn"]
+size = Vector2(30, 12)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mq1bj"]
+atlas = ExtResource("1_cfvu4")
+region = Rect2(352, 20, 32, 20)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_iwv7r"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mq1bj")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[node name="BouncePad" type="Area2D"]
+script = SubResource("GDScript_au00k")
+height = 64.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -6)
+shape = SubResource("RectangleShape2D_707cn")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -2)
+sprite_frames = SubResource("SpriteFrames_iwv7r")
