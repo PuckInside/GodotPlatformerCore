@@ -40,8 +40,10 @@ func _physics_process(_delta: float) -> void:
 		$MovementFSM.dash()
 		can_dash = false
 	
-	if Input.is_action_just_pressed(\"down\") and is_on_floor():
-		position.y += 1.25
+	if Input.is_action_just_pressed(\"down\"):
+		set_collision_mask_value(5, false)
+		await get_tree().create_timer(0.1).timeout
+		set_collision_mask_value(5, true)
 
 func _try_jump() -> void:
 	if $CoyoteTime.is_stopped():
@@ -102,6 +104,7 @@ func _physics_process(_delta: float) -> void:
 "
 
 [node name="Player" type="CharacterBody2D"]
+collision_mask = 17
 script = SubResource("GDScript_i13w0")
 metadata/_custom_type_script = "uid://uvg7xk5coa61"
 

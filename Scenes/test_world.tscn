@@ -541,6 +541,8 @@ position = Vector2(128, 48)
 
 [node name="OneWayPlatform" type="StaticBody2D" parent="."]
 position = Vector2(256, 56)
+collision_layer = 16
+collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="OneWayPlatform"]
 position = Vector2(-0.5, 0)
