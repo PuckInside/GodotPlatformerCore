@@ -39,6 +39,9 @@ func _physics_process(_delta: float) -> void:
 	if Input.is_action_just_pressed(\"dash\") and can_dash:
 		$MovementFSM.dash()
 		can_dash = false
+	
+	if Input.is_action_just_pressed(\"down\") and is_on_floor():
+		position.y += 1.25
 
 func _try_jump() -> void:
 	if $CoyoteTime.is_stopped():
